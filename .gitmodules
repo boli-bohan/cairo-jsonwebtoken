@@ -1,0 +1,6 @@
+[submodule "caistring"]
+	path = caistring
+	url = https://github.com/topology-gg/caistring.git
+[submodule "starknet-libs"]
+	path = starknet-libs
+	url = https://github.com/sekai-studio/starknet-libs.git
