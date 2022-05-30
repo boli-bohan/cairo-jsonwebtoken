@@ -18,11 +18,13 @@ func encode{range_check_ptr}(header : Str, payload : Str, secret : Str) -> (jwt 
 
     let res = _validate_header(header)
     if res != 0:
-        return (str_empty())
+        let empty = str_empty()
+        return (empty)
     
     let res = _validate_payload(payload)
     if res != 0:
-        return (str_empty())
+        let empty = str_empty()
+        return (empty)
 
     let header_part = base64_encode_str(header)
     let payload_part = base64_encode_str(payload)
@@ -110,7 +112,6 @@ func _validate_json_field_exists{range_check_ptr}(in : Str, literal : felt) -> (
     # TODO: json library
 end
 
-func _generate_signature
 #
 # perform HMACSHA256 hash on data + secret
 #
