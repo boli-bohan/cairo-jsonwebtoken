@@ -6,7 +6,7 @@ from starkware.cairo.common.math import unsigned_div_rem
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.memcpy import memcpy
 
-from contracts.Str import Str, str_concat, str_concat_literal, str_empty
+from contracts.Str import Str, str_compare, str_cut, str_concat, str_concat_literal, str_rfind, str_substring, str_empty
 from contracts.lib.base64 import base64_encode, base64_decode
 
 #
@@ -17,11 +17,11 @@ func encode{range_check_ptr}(header : Str, payload : Str, secret : Str) -> (jwt 
     alloc_locals
 
     let res = _validate_header(header)
-    if res == 0:
+    if res != 0:
         return (str_empty())
     
     let res = _validate_payload(payload)
-    if res == 0:
+    if res != 0:
         return (str_empty())
 
     let header_part = base64_encode_str(header)
@@ -30,58 +30,87 @@ func encode{range_check_ptr}(header : Str, payload : Str, secret : Str) -> (jwt 
 
     let sig = _hs256(data, secret)
 
-    let jwt = str_concat(str_concat(header_part, payload_part), sig)
+    let jwt = str_concat(data, sig)
     return (jwt)
 end
 
 #
-# Takes jwt string, validate signature, spit out header/payload
+# Validate jwt signature, return 0 if valid
 #
-func decode{range_check_ptr}(jwt : Str, secret : Str) -> (header : Str, payload : Str):
+func validate{range_check_ptr}(jwt : Str, secret : Str) -> (res : felt) :
+    alloc_locals
 
+    let index = str_rfind(jwt, '.')
+    let data = str_substring(jwt, 0, index)
+    let input_sig = str_substring(jwt, index+1, jwt.arr_len)
+
+    let sig = _hs256(data, secret)
+    
+    if str_compare(sig, input_sig) == 0:
+        return (0)
+    else:
+        return (-1)
+end
+
+#
+# Extract header/payload json strings from jwt
+#
+func get_data{range_check_ptr}(jwt : Str) -> (header : Str, payload : Str) :
+    alloc_locals
+
+    let header_part = str_cut(jwt, '.', 0)
+    let payload_part = str_cut(jwt, '.', 1)
+
+    let header = base64_decode(header_part)
+    let payload = base64_decode(payload_part)
+
+    return (header, payload)
 end
 
 ####################################################################
 # Internal functions
 
 #
-# check valid json + fields, return 0 if invalid
+# check valid json + fields, return 0 if valid
 #
 func _validate_header{range_check_ptr}(header : Str) -> (res : felt) :
     if _validate_simple_json(header) == 0:
-        return (0)
+        return (-1)
 
     if _validate_json_field_exists(header, 'alg') == 0:
-        return (0)
+        return (-2)
 
     if _validate_json_field_exists(header, 'kid') == 0:
-        return (0)
+        return (-2)
 
-    return (1)
+    return (0)
 end
 
 #
-# check valid json + fields, return 0 if invalid
+# check valid json + fields, return 0 if valid
 #
 func _validate_payload{range_check_ptr}(payload : Str) -> (res : felt) :
     if _validate_simple_json(payload) == 0:
-        return (0)
+        return (-1)
 
-    return (1)
+    return (0)
 end
 
 #
-# check if string is a simple json (no nested objects/arrays), return 0 if invalid
+# check if string is a simple json (no nested objects/arrays), return 0 if valid
 #
 func _validate_simple_json{range_check_ptr}(in : Str) -> (res : felt) :
+    # TODO: json library
 end
 
 #
 # check if field is present in string
 #
 func _validate_json_field_exists{range_check_ptr}(in : Str, literal : felt) -> (res : felt) :    
+    # TODO: json library
 end
 
+func _generate_signature
 #
 # perform HMACSHA256 hash on data + secret
 #
