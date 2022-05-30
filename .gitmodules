@@ -1,6 +1,6 @@
 [submodule "caistring"]
 	path = caistring
-	url = https://github.com/topology-gg/caistring.git
+	url = https://github.com/BoBowchan/caistring.git
 [submodule "cairo-base64"]
 	path = cairo-base64
-	url = https://github.com/dhruvkelawala/cairo-base64.git
+	url = https://github.com/BoBowchan/cairo-base64.git
